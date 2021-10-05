@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <title>CCI</title>
+  <style>
+    body {
+        margin:0; 
+        overflow:hidden;
+    }
+    p{
+        color: aliceblue;
+        font-family: "Lucida Console", "Courier New", monospace;
+    }
+    #container {
+        position: relative;
+    }
+    #container canvas, #overlay {
+        position: absolute;
+        width: 200px;
+        left:650px; 
+        top:80px;
+        background-color: rgba(0, 0, 0, 0.5);
+        background-size: 300m;
+        border-width:10px;
+        border-style:solid;
+        border-color:rgb(255, 166, 0);
+        border-radius: 15px;
+    }
+    canvas {
+        border: 1px solid black;
+    }
+    
+  </style>
+
+</head>
+<body>
+    <div>
+
+    </div>
+    <form id="overlay">
+        <p>
+            <input type="checkbox" id="chkAxis" value="on">Colocar Eixo
+        </p>
+        <p>
+            <input type="checkbox" id="chkAnim" value="on">Colocar Animação
+        </p>
+        <p>
+            <input type="checkbox" id="chkGrid" value="on">Colocar Grid
+        </p>
+    </form>
+
+    <canvas id="mycanvas" width="1300" height="1200"></canvas>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script>
+        //window.focus();
+        var scene = new THREE.Scene();
+
+        var aspectRatio = window.innerWidth / window.innerHeight;
+
+        const camera = new THREE.PerspectiveCamera(
+            45, //vertical
+            aspectRatio,
+            1, // near
+            1000 // far
+        );
+
+        camera.position.set(0, 0, 200);
+        camera.up.set(-0.21, 1, 0);
+        dVector = new THREE.Vector3(-7, 37, 0);
+        camera.lookAt(dVector);
+
+        var renderer = new THREE.WebGLRenderer({
+            canvas: document.getElementById("mycanvas"),
+            antialias: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        //adicionando imagem de fundo
+        tx1 = new THREE.TextureLoader().load('background.png');
+        tx1.minFilter = THREE.LinearFilter;
+        scene.background = tx1;
+
+        const size = 300;
+        const divisions = 10;
+
+        const gridHelper = new THREE.GridHelper( size, divisions );
+        gridHelper.rotation.x = Math.PI/2*0.1;
+        scene.add( gridHelper );
+
+        var axesHelper = new THREE.AxesHelper(50);
+        scene.add(axesHelper);
+
+        //posição inicial do carro
+        var object_Car = Car();
+        object_Car.position.x = -220;
+        object_Car.position.y = -5;
+        object_Car.position.z = 5;
+        object_Car.rotation.z = 0;
+        object_Car.rotation.x = -Math.PI/2*0.9;
+        object_Car.rotation.y = 0;
+        scene.add(object_Car);
+
+        var ambient_light = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambient_light);
+
+        var directional_light = new THREE.DirectionalLight(0xffffff, 0.6);
+        directional_light.position.set(-100, -300, 400);
+        scene.add(directional_light);
+
+
+        function Car() {
+            var car = new THREE.Group();
+            const geometry = new THREE.CylinderGeometry( 10, 10, 40, 40 );
+            const material = new THREE.MeshBasicMaterial( {color: 0x000000} );
+            const backWheel = new THREE.Mesh( geometry, material );
+            scene.add( backWheel );
+            backWheel.position.x = -18;
+            car.add(backWheel);
+            
+            const frontWheel = new THREE.Mesh( geometry, material );
+            frontWheel.position.x = 18;
+            car.add(frontWheel);
+
+            var main = new THREE.Mesh(
+                new THREE.BoxBufferGeometry(60, 30, 15),
+                new THREE.MeshLambertMaterial({ color: 0xffffff })
+            );
+            main.position.z = 12;
+            car.add(main);
+
+            var cabin = new THREE.Mesh(
+                new THREE.BoxBufferGeometry(33, 24, 12),
+                new THREE.MeshLambertMaterial({ color: 0x0000ff })
+            );
+            cabin.position.x = -6;
+            cabin.position.z = 25.5;
+            car.add(cabin);
+
+            return car;
+        }
+
+        //velocidade do carro
+        var car_speed = 1.5
+
+        function updateCar() {
+            car_speed = getPlayerSpeed()
+            object_Car.position.x += car_speed;
+
+            if (object_Car.position.x > 220) {
+                object_Car.position.x = object_Car.position.x*-1
+            }
+            
+        }
+
+        let accelerate = false;
+        let decelerate = false;
+
+        window.addEventListener("keydown", function (event) {
+            if (event.key == "ArrowUp") {
+                animate();
+                accelerate = true;
+                return;
+            }
+            if (event.key == "ArrowDown") {
+                animate();
+                decelerate = true;
+                return;
+            }
+            if (event.key == "R" || event.key == "r") {
+                updateCar();
+                return;
+            }
+        });
+        window.addEventListener("keyup", function (event) {
+            if (event.key == "ArrowUp") {
+                accelerate = false;
+                return;
+            }
+            if (event.key == "ArrowDown") {
+                animate();
+                decelerate = false;
+                return;
+            }
+        });
+
+        function getPlayerSpeed() {
+            if (accelerate && car_speed < 0.8) return car_speed * 1.01;
+            if (decelerate && car_speed > 0.01) return car_speed * 0.9;
+            return car_speed;
+        }
+
+        function updateScreen() {
+            var chkAxis = document.getElementById("chkAxis");
+            var chkAnim = document.getElementById("chkAnim");
+
+            if (chkAxis.checked) {
+                console.log("escolheu Eixo");
+                axesHelper.visible = true
+            } else {
+                console.log("não escolheu Eixo");
+                axesHelper.visible = false
+            }
+            if (chkAnim.checked) {
+                console.log("escolheu Animacao");
+                object_Car.visible = true
+            } else {
+                console.log("não escolheu Animacao");
+                object_Car.visible = false
+            }
+            if (chkGrid.checked) {
+                console.log("escolheu Grid");
+                gridHelper.visible = true
+            } else {
+                console.log("não escolheu Grid");
+                gridHelper.visible = false
+            }
+        }
+
+        //comentario para testar github
+        var animate = function () {
+            requestAnimationFrame(animate);
+            updateCar();
+            updateScreen();
+
+
+            renderer.render(scene, camera);
+        };
+        
+        animate();
+
+    </script>
+</body>
+</html>
