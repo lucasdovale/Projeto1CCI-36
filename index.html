@@ -147,8 +147,6 @@
 
         function updateCar() {
             vel_carro = getPlayerSpeed()
-            if (vel_carro > vel_max) vel_carro = vel_max;
-            if (vel_carro < vel_min) vel_carro = vel_min;
             carro.position.x += vel_carro;
 
             if (carro.position.x > 220) {
