@@ -185,8 +185,10 @@
         });
 
         function getPlayerSpeed() {
-            if (acelerar && vel_carro < 0.8) return vel_carro * 1.01;
-            if (frear && vel_carro > 0.01) return vel_carro * 0.9;
+            var vel_max = 2;
+            var vel_min = 0.01;
+            if (acelerar && vel_carro < vel_max) return vel_carro * 1.01;
+            if (frear && vel_carro > vel_min) return vel_carro * 0.9;
             return vel_carro;
         }
 
