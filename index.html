@@ -142,9 +142,13 @@
 
         //velocidade do carro
         var vel_carro = 1.5
+        var vel_max = 1.5;
+        var vel_min = 0.00000001;
 
         function updateCar() {
             vel_carro = getPlayerSpeed()
+            if (vel_carro > vel_max) vel_carro = vel_max;
+            if (vel_carro < vel_min) vel_carro = vel_min;
             carro.position.x += vel_carro;
 
             if (carro.position.x > 220) {
@@ -185,11 +189,16 @@
         });
 
         function getPlayerSpeed() {
-            var vel_max = 2;
-            var vel_min = 0.01;
-            if (acelerar && vel_carro < vel_max) return vel_carro * 1.01;
-            if (frear && vel_carro > vel_min) return vel_carro * 0.9;
-            return vel_carro;
+            if (acelerar) {
+                if (vel_carro < vel_max) return vel_carro * 1.001;
+                else return vel_max;
+            }
+            else if (frear) {
+                if (vel_carro > vel_min) return vel_carro * 0.99;
+                else return vel_min;
+            } else {
+                return vel_carro;
+            }
         }
 
         function updateScreen() {
